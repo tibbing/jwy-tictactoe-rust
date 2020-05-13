@@ -2,6 +2,8 @@ use crate::lib::brick::Brick;
 use crate::lib::player::Player;
 use ::std::*;
 
+const GOAL: i8 = 3;
+
 #[derive(Clone)]
 pub struct Board {
     pub bricks: Vec<Brick>,
@@ -27,12 +29,21 @@ impl Board {
                     .into_iter()
                     .filter(|brick| brick.x == x)
                     .map(|brick| brick.y)
-                    .collect(),
-                3,
+                    .collect()
             );
         }
 
-        fn check_line(mut values: Vec<i32>, target: i8) -> bool {
+        fn check_horizontal(bricks: Vec<Brick>, y: i32) -> bool {
+            return check_line(
+                bricks
+                    .into_iter()
+                    .filter(|brick| brick.y == y)
+                    .map(|brick| brick.x)
+                    .collect()
+            );
+        }
+
+        fn check_line(mut values: Vec<i32>) -> bool {
             values.sort();
 
             let mut _count = 0;
@@ -40,7 +51,7 @@ impl Board {
             for _i in 0..values.len() {
                 let _p = values[_i];
                 _count = if _p == _last_val + 1 { _count + 1 } else { 0 };
-                if _count == target - 1 {
+                if _count == GOAL - 1 {
                     return true;
                 }
                 _last_val = _p;
@@ -48,13 +59,16 @@ impl Board {
             return false;
         }
 
-        let player_bricks = self
+        let player_bricks: Vec<Brick> = self
             .bricks
             .clone()
             .into_iter()
             .filter(|brick| brick.player.as_str() == self.player.as_str())
             .collect();
-        if check_vertical(player_bricks, x) {
+        if check_vertical(player_bricks.clone(), x) {
+            return true;
+        }
+        if check_horizontal(player_bricks.clone(), y) {
             return true;
         }
         return false;

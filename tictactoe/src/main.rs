@@ -42,9 +42,9 @@ fn main() {
             Err(error) => println!("error: {}", error),
         }
 
-        if count == 6 {
-            break;
-        }
+        // if count == 6 {
+        //     break;
+        // }
 
         _board.nextplayer();
     }
