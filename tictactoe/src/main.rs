@@ -6,10 +6,11 @@ fn main() {
     let mut _board: Board = Board {
         points,
         player: Player::Player1,
+        size: 2,
     };
 
     let mut count = 0u32;
-    _board = nextplayer(_board);
+    _board.nextplayer();
 
     loop {
         count += 1;
@@ -17,7 +18,7 @@ fn main() {
         let mut input = String::new();
         match io::stdin().read_line(&mut input) {
             Ok(_n) => {
-                println!("Placing marker at {}", input);
+                // println!("Placing marker at {}", input);
                 let pos: Vec<_> = input
                     .trim()
                     .split_whitespace()
@@ -27,45 +28,62 @@ fn main() {
                 let _pos_x: i32 = pos[0];
                 let _pos_y: i32 = pos[1];
 
-                _board = place(_board, _pos_x, _pos_y);
-                _board = nextplayer(_board);
+                _board.place(_pos_x, _pos_y);
             }
             Err(error) => println!("error: {}", error),
         }
+        _board.draw();
 
-        if count == 3 {
-            println!("OK, that's enough");
+        if count == 4 {
             break;
         }
+
+        _board.nextplayer();
     }
 
-    show(_board);
     println!("Game over!");
 }
 
-fn place(mut _board: Board, x: i32, y: i32) -> Board {
-    let _point: Point = Point {
-        x: x,
-        y: y,
-        player: _board.player,
-    };
-    _board.points.push(_point);
-    return _board;
-}
-
-fn nextplayer(mut _board: Board) -> Board {
-    if let Player::Player1 = _board.player {
-        _board.player = Player::Player2
-    } else {
-        _board.player = Player::Player1
+impl Board {
+    pub fn place(&mut self, x: i32, y: i32) {
+        let _point: Point = Point {
+            x: x,
+            y: y,
+            player: self.player,
+        };
+        self.points.push(_point);
+        self.size = cmp::max(cmp::max(x.abs(), y.abs()), self.size)
     }
-    println!("{} turn:", _board.player.as_str());
-    return _board;
-}
 
-fn show(_board: Board) {
-    for point in _board.points.iter() {
-        println!("{0} at {1},{2}", point.player.as_str(), point.x, point.y);
+    pub fn nextplayer(&mut self) {
+        if let Player::Player1 = self.player {
+            self.player = Player::Player2
+        } else {
+            self.player = Player::Player1
+        }
+        println!("{} turn:", self.player.as_str());
+    }
+
+    pub fn draw(&self) {
+        println!("");
+        for _y in (-self.size..self.size + 1).rev() {
+            for _x in -self.size..self.size + 1 {
+                print!("{0} ",self.get_point(_x,_y));
+            }
+            println!("");
+        }
+        // for point in self.points.iter() {
+        //     println!("{0} at {1},{2}", point.player.as_str(), point.x, point.y);
+        // }
+    }
+
+    pub fn get_point(&self, x: i32, y: i32) -> &str {
+      for point in self.points.iter() {
+        if point.x == x && point.y == y {
+          return point.player.as_str();
+        }
+      }
+      return "·";
     }
 }
 
@@ -95,4 +113,5 @@ struct Point {
 struct Board {
     points: Vec<Point>,
     player: Player,
+    size: i32,
 }
