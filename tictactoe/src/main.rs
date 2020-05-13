@@ -33,10 +33,14 @@ fn main() {
                 let _pos_y: i32 = pos[1];
 
                 _board.place(_pos_x, _pos_y);
+                _board.display();
+                if _board.is_winning_move(_pos_x, _pos_y) {
+                    println!("{0} wins!", _board.player.as_str());
+                    break;
+                }
             }
             Err(error) => println!("error: {}", error),
         }
-        _board.display();
 
         if count == 6 {
             break;
