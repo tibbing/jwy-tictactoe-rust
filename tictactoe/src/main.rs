@@ -6,9 +6,9 @@ use crate::lib::player::Player;
 
 fn main() {
     println!("Starting new game...");
-    let points = Vec::new();
+    let bricks = Vec::new();
     let mut _board: Board = Board {
-        points,
+        bricks,
         player: Player::PlayerX,
         size: 2,
     };
@@ -36,7 +36,7 @@ fn main() {
             }
             Err(error) => println!("error: {}", error),
         }
-        _board.draw();
+        _board.display();
 
         if count == 6 {
             break;
