@@ -27,17 +27,17 @@ fn main() {
 
         match input {
             Ok(position) => {
-                if _board.is_taken(position.x, position.y) {
+                if _board.is_taken(position) {
                     println!("Oops! That spot is already taken. Try another one.");
-                } else if !_board.is_within_board(position.x, position.y) {
+                } else if !_board.is_within_board(position) {
                     println!(
                         "Oops! That spot is outside the board. Board max size is {0}. Try another one.",
                         MAX_SIZE
                     );
                 } else {
-                    _board.place(position.x, position.y);
+                    _board.place(position);
                     _board.display();
-                    if _board.is_winning_move(position.x, position.y) {
+                    if _board.is_winning_move(position) {
                         println!("{0} wins!", _board.player.as_str());
                         break;
                     }

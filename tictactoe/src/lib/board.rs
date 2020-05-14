@@ -1,5 +1,7 @@
 use crate::lib::brick::Brick;
+use crate::lib::direction::Direction;
 use crate::lib::player::Player;
+use crate::lib::position::Position;
 use ::std::*;
 
 pub const INIT_SIZE: i8 = 2;
@@ -25,48 +27,39 @@ impl Board {
         }
     }
 
-    pub fn place(&mut self, x: i8, y: i8) {
+    pub fn place(&mut self, pos: Position) {
         let _brick: Brick = Brick {
-            x,
-            y,
+            position: pos,
             player: self.player,
         };
         self.bricks.push(_brick);
-        self.size = cmp::max(cmp::max(x.abs(), y.abs()), self.size);
+        self.size = cmp::max(cmp::max(pos.x.abs(), pos.y.abs()), self.size);
     }
 
-    pub fn is_within_board(&self, x: i8, y: i8) -> bool {
-        return x.abs() <= MAX_SIZE && y.abs() <= MAX_SIZE;
+    pub fn is_within_board(&self, pos: Position) -> bool {
+        return pos.x.abs() <= MAX_SIZE && pos.y.abs() <= MAX_SIZE;
     }
 
-    pub fn is_winning_move(&self, x: i8, y: i8) -> bool {
+    pub fn is_winning_move(&self, pos: Position) -> bool {
         fn check_diagonal(bricks: Vec<Brick>, goal: i8) -> bool {
             fn is_winning(
                 bricks: &Vec<Brick>,
-                x: i8,
-                y: i8,
-                direction: i8,
+                pos: Position,
+                direction: Direction,
                 goal: i8,
                 count: i8,
             ) -> bool {
-                let has_neighbor = |x, y| -> bool {
+                let has_neighbor = |pos: Position| -> bool {
                     return bricks
                         .into_iter()
-                        .any(|brick| brick.x == x + 1 && brick.y == y + 1 * direction);
+                        .any(|brick| brick.position == pos.neighbor(direction));
                 };
 
                 if count == goal - 1 {
                     return true;
                 }
-                if has_neighbor(x, y) {
-                    return is_winning(
-                        bricks,
-                        x + 1,
-                        y + 1 * direction,
-                        direction,
-                        goal,
-                        count + 1,
-                    );
+                if has_neighbor(pos) {
+                    return is_winning(bricks, pos.neighbor(direction), direction, goal, count + 1);
                 }
                 return false;
             }
@@ -74,36 +67,34 @@ impl Board {
             let mut _count = 0;
             let mut _last_brick = bricks[0];
             for _i in 0..bricks.len() {
-                let _p = bricks[_i];
-                if is_winning(&bricks, _p.x, _p.y, 1, goal, 0) {
-                    // Up
+                let _brick = bricks[_i];
+                if is_winning(&bricks, _brick.position, Direction::UpRight, goal, 0) {
                     return true;
                 }
-                if is_winning(&bricks, _p.x, _p.y, -1, goal, 0) {
-                    // Down
+                if is_winning(&bricks, _brick.position, Direction::DownRight, goal, 0) {
                     return true;
                 }
             }
             return false;
         }
 
-        fn check_vertical(bricks: Vec<Brick>, x: i8, goal: i8) -> bool {
+        fn check_vertical(bricks: Vec<Brick>, from_x: i8, goal: i8) -> bool {
             return check_line(
                 bricks
                     .into_iter()
-                    .filter(|brick| brick.x == x)
-                    .map(|brick| brick.y)
+                    .filter(|brick| brick.position.x == from_x)
+                    .map(|brick| brick.position.y)
                     .collect(),
                 goal,
             );
         }
 
-        fn check_horizontal(bricks: Vec<Brick>, y: i8, goal: i8) -> bool {
+        fn check_horizontal(bricks: Vec<Brick>, from_y: i8, goal: i8) -> bool {
             return check_line(
                 bricks
                     .into_iter()
-                    .filter(|brick| brick.y == y)
-                    .map(|brick| brick.x)
+                    .filter(|brick| brick.position.y == from_y)
+                    .map(|brick| brick.position.x)
                     .collect(),
                 goal,
             );
@@ -131,10 +122,10 @@ impl Board {
             .into_iter()
             .filter(|brick| brick.player.as_str() == self.player.as_str())
             .collect();
-        if check_vertical(player_bricks.clone(), x, self.goal) {
+        if check_vertical(player_bricks.clone(), pos.x, self.goal) {
             return true;
         }
-        if check_horizontal(player_bricks.clone(), y, self.goal) {
+        if check_horizontal(player_bricks.clone(), pos.y, self.goal) {
             return true;
         }
         if check_diagonal(player_bricks.clone(), self.goal) {
@@ -154,21 +145,22 @@ impl Board {
 
     pub fn display(&self) {
         println!("");
-        for _y in (-self.size..self.size + 1).rev() {
-            for _x in -self.size..self.size + 1 {
-                print!("{0} ", self.get_brick(_x, _y));
+        for y in (-self.size..self.size + 1).rev() {
+            for x in -self.size..self.size + 1 {
+                let pos = Position { x, y };
+                print!("{0} ", self.get_brick(pos));
             }
             println!("");
         }
     }
 
-    pub fn is_taken(&self, x: i8, y: i8) -> bool {
-        return self.get_brick(x, y) != EMPTY_CHAR;
+    pub fn is_taken(&self, pos: Position) -> bool {
+        return self.get_brick(pos) != EMPTY_CHAR;
     }
 
-    pub fn get_brick(&self, x: i8, y: i8) -> &str {
+    pub fn get_brick(&self, pos: Position) -> &str {
         for brick in self.bricks.iter() {
-            if brick.x == x && brick.y == y {
+            if brick.position == pos {
                 return brick.player.as_str();
             }
         }
@@ -183,90 +175,121 @@ mod tests {
     #[test]
     fn should_test_already_taken() {
         let mut _board = Board::new(3);
-        _board.place(0, 0);
-        assert_eq!(_board.get_brick(0, 0), _board.player.as_str());
-        assert_eq!(_board.is_taken(0, 0), true);
+        let pos = Position::origo();
+        _board.place(pos);
+
+        assert_eq!(_board.get_brick(pos), _board.player.as_str());
+        assert_eq!(_board.is_taken(pos), true);
     }
 
     #[test]
     fn should_test_within_board() {
         let mut _board = Board::new(3);
-        assert_eq!(_board.is_within_board(0, 0), true);
-        assert_eq!(_board.is_within_board(MAX_SIZE, MAX_SIZE), true);
-        assert_eq!(_board.is_within_board(-MAX_SIZE, -MAX_SIZE), true);
-        assert_eq!(_board.is_within_board(MAX_SIZE + 1, 0), false);
-        assert_eq!(_board.is_within_board(0, MAX_SIZE + 1), false);
+        assert_eq!(_board.is_within_board(Position::origo()), true);
+        assert_eq!(
+            _board.is_within_board(Position {
+                x: MAX_SIZE,
+                y: MAX_SIZE
+            }),
+            true
+        );
+        assert_eq!(
+            _board.is_within_board(Position {
+                x: -MAX_SIZE,
+                y: -MAX_SIZE
+            }),
+            true
+        );
+        assert_eq!(
+            _board.is_within_board(Position {
+                x: MAX_SIZE + 1,
+                y: 0
+            }),
+            false
+        );
+        assert_eq!(
+            _board.is_within_board(Position {
+                x: 0,
+                y: MAX_SIZE + 1
+            }),
+            false
+        );
     }
 
     #[test]
     fn should_win_horizontal() {
         let mut _board = Board::new(3);
-        _board.place(-1, 0);
-        _board.place(0, 0);
-        _board.place(1, 0);
-        _board.place(1, 1);
-        assert_eq!(_board.is_winning_move(-1, 0), true);
-        assert_eq!(_board.is_winning_move(0, 0), true);
-        assert_eq!(_board.is_winning_move(1, 0), true);
-        assert_eq!(_board.is_winning_move(1, 1), false);
+        let pos = Position::origo();
+        _board.place(pos);
+        _board.place(pos.neighbor_right());
+        _board.place(pos.neighbor_up());
+        _board.place(pos.neighbor_right().neighbor_right());
+
+        assert_eq!(_board.is_winning_move(pos), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_right()), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_up()), false);
     }
 
     #[test]
     fn should_win_vertical() {
         let mut _board = Board::new(3);
-        _board.place(0, -1);
-        _board.place(0, 0);
-        _board.place(0, 1);
-        _board.place(1, 1);
-        assert_eq!(_board.is_winning_move(0, -1), true);
-        assert_eq!(_board.is_winning_move(0, 0), true);
-        assert_eq!(_board.is_winning_move(0, 1), true);
-        assert_eq!(_board.is_winning_move(1, 1), false);
+        let pos = Position::origo();
+        _board.place(pos);
+        _board.place(pos.neighbor_right());
+        _board.place(pos.neighbor_up());
+        _board.place(pos.neighbor_up().neighbor_up());
+
+        assert_eq!(_board.is_winning_move(pos), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_up()), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_right()), false);
     }
 
     #[test]
     fn should_win_diagonal_up() {
         let mut _board = Board::new(3);
-        _board.place(-1, -1);
-        _board.place(0, 0);
-        _board.place(1, 1);
-        assert_eq!(_board.is_winning_move(-1, -1), true);
-        assert_eq!(_board.is_winning_move(0, 0), true);
-        assert_eq!(_board.is_winning_move(1, 1), true);
+        let pos = Position::origo();
+        _board.place(pos);
+        _board.place(pos.neighbor_up_left());
+        _board.place(pos.neighbor_down_right());
+
+        assert_eq!(_board.is_winning_move(pos), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_up_left()), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_down_right()), true);
     }
 
     #[test]
     fn should_win_diagonal_down() {
         let mut _board = Board::new(3);
-        _board.place(-1, 1);
-        _board.place(0, 0);
-        _board.place(1, -1);
-        assert_eq!(_board.is_winning_move(-1, 1), true);
-        assert_eq!(_board.is_winning_move(0, 0), true);
-        assert_eq!(_board.is_winning_move(1, -1), true);
+        let pos = Position::origo();
+        _board.place(pos);
+        _board.place(pos.neighbor_up_right());
+        _board.place(pos.neighbor_down_left());
+
+        assert_eq!(_board.is_winning_move(pos), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_up_right()), true);
+        assert_eq!(_board.is_winning_move(pos.neighbor_down_left()), true);
     }
 
     #[test]
     fn should_not_win_missing_horizontal() {
         let mut _board = Board::new(3);
-        _board.place(-2, 0);
-        _board.place(-1, 0);
-        _board.place(1, 0);
-        _board.place(2, 0);
-        assert_eq!(_board.is_winning_move(-2, 0), false);
-        assert_eq!(_board.is_winning_move(-1, 0), false);
-        assert_eq!(_board.is_winning_move(1, 0), false);
-        assert_eq!(_board.is_winning_move(2, 0), false);
+        let pos = Position::origo();
+        _board.place(pos);
+        _board.place(pos.neighbor_right());
+        _board.place(pos.neighbor_left().neighbor_left());
+
+        assert_eq!(_board.is_winning_move(pos), false);
+        assert_eq!(_board.is_winning_move(pos.neighbor_right()), false);
     }
 
     #[test]
     fn should_not_win_missing_diagonal() {
         let mut _board = Board::new(3);
-        _board.place(-1, -1);
-        _board.place(0, 0);
-        _board.place(2, 2);
-        _board.place(3, 3);
-        assert_eq!(_board.is_winning_move(2, 2), false);
-        assert_eq!(_board.is_winning_move(3, 3), false);
+        let pos = Position::origo();
+        _board.place(pos);
+        _board.place(pos.neighbor_down_left());
+        _board.place(pos.neighbor_up_right().neighbor_up_right());
+
+        assert_eq!(_board.is_winning_move(pos), false);
     }
 }
