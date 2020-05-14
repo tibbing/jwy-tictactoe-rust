@@ -2,7 +2,6 @@ use ::std::*;
 
 mod lib;
 use crate::lib::board::Board;
-use crate::lib::board::EMPTY_CHAR;
 use crate::lib::board::GOAL;
 use crate::lib::board::MAX_SIZE;
 
@@ -33,7 +32,7 @@ fn main() {
                 let _pos_x: i8 = pos[0];
                 let _pos_y: i8 = pos[1];
 
-                if _board.get_brick(_pos_x, _pos_y) != EMPTY_CHAR {
+                if _board.is_taken(_pos_x, _pos_y) {
                     println!("Oops! That spot is already taken. Try another one.");
                 } else {
                     _board.place(_pos_x, _pos_y);

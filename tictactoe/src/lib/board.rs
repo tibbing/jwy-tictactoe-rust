@@ -141,6 +141,10 @@ impl Board {
         }
     }
 
+    pub fn is_taken(&self, x: i8, y: i8) -> bool {
+        return self.get_brick(x, y) != EMPTY_CHAR;
+    }
+
     pub fn get_brick(&self, x: i8, y: i8) -> &str {
         for brick in self.bricks.iter() {
             if brick.x == x && brick.y == y {
@@ -148,5 +152,90 @@ impl Board {
             }
         }
         return EMPTY_CHAR;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn should_test_already_taken() {
+        let mut _board = Board::new();
+        _board.place(0, 0);
+        assert_eq!(_board.get_brick(0, 0), _board.player.as_str());
+        assert_eq!(_board.is_taken(0, 0), true);
+    }
+
+    #[test]
+    fn should_win_horizontal() {
+        let mut _board = Board::new();
+        _board.place(-1, 0);
+        _board.place(0, 0);
+        _board.place(1, 0);
+        _board.place(1, 1);
+        assert_eq!(_board.is_winning_move(-1, 0), true);
+        assert_eq!(_board.is_winning_move(0, 0), true);
+        assert_eq!(_board.is_winning_move(1, 0), true);
+        assert_eq!(_board.is_winning_move(1, 1), false);
+    }
+
+    #[test]
+    fn should_win_vertical() {
+        let mut _board = Board::new();
+        _board.place(0, -1);
+        _board.place(0, 0);
+        _board.place(0, 1);
+        _board.place(1, 1);
+        assert_eq!(_board.is_winning_move(0, -1), true);
+        assert_eq!(_board.is_winning_move(0, 0), true);
+        assert_eq!(_board.is_winning_move(0, 1), true);
+        assert_eq!(_board.is_winning_move(1, 1), false);
+    }
+
+    #[test]
+    fn should_win_diagonal_up() {
+        let mut _board = Board::new();
+        _board.place(-1, -1);
+        _board.place(0, 0);
+        _board.place(1, 1);
+        assert_eq!(_board.is_winning_move(-1, -1), true);
+        assert_eq!(_board.is_winning_move(0, 0), true);
+        assert_eq!(_board.is_winning_move(1, 1), true);
+    }
+
+    #[test]
+    fn should_win_diagonal_down() {
+        let mut _board = Board::new();
+        _board.place(-1, 1);
+        _board.place(0, 0);
+        _board.place(1, -1);
+        assert_eq!(_board.is_winning_move(-1, 1), true);
+        assert_eq!(_board.is_winning_move(0, 0), true);
+        assert_eq!(_board.is_winning_move(1, -1), true);
+    }
+
+    #[test]
+    fn should_not_win_missing_horizontal() {
+        let mut _board = Board::new();
+        _board.place(-2, 0);
+        _board.place(-1, 0);
+        _board.place(1, 0);
+        _board.place(2, 0);
+        assert_eq!(_board.is_winning_move(-2, 0), false);
+        assert_eq!(_board.is_winning_move(-1, 0), false);
+        assert_eq!(_board.is_winning_move(1, 0), false);
+        assert_eq!(_board.is_winning_move(2, 0), false);
+    }
+
+    #[test]
+    fn should_not_win_missing_diagonal() {
+        let mut _board = Board::new();
+        _board.place(-1, -1);
+        _board.place(0, 0);
+        _board.place(2, 2);
+        _board.place(3, 3);
+        assert_eq!(_board.is_winning_move(2, 2), false);
+        assert_eq!(_board.is_winning_move(3, 3), false);
     }
 }
