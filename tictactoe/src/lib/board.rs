@@ -2,7 +2,8 @@ use crate::lib::brick::Brick;
 use crate::lib::player::Player;
 use ::std::*;
 
-const GOAL: i8 = 3;
+pub const GOAL: i8 = 3;
+pub const MAX_SIZE: i8 = 15;
 
 #[derive(Clone)]
 pub struct Board {
@@ -23,13 +24,46 @@ impl Board {
     }
 
     pub fn is_winning_move(&self, x: i32, y: i32) -> bool {
+        fn check_diagonal(bricks: Vec<Brick>) -> bool {
+            fn is_winning(bricks: &Vec<Brick>, x: i32, y: i32, direction: i32, count: i8) -> bool {
+                let has_neighbor = |x, y, direction| -> bool {
+                    return bricks
+                        .into_iter()
+                        .any(|brick| brick.x == x + 1 && brick.y == y + 1 * direction);
+                };
+
+                if count == GOAL - 1 {
+                    return true;
+                }
+                if has_neighbor(x, y, direction) {
+                    return is_winning(bricks, x + 1, y + 1 * direction, direction, count + 1);
+                }
+                return false;
+            }
+
+            let mut _count = 0;
+            let mut _last_brick = bricks[0];
+            for _i in 0..bricks.len() {
+                let _p = bricks[_i];
+                if is_winning(&bricks, _p.x, _p.y, 1, 0) {
+                    // Up
+                    return true;
+                }
+                if is_winning(&bricks, _p.x, _p.y, -1, 0) {
+                    // Down
+                    return true;
+                }
+            }
+            return false;
+        }
+
         fn check_vertical(bricks: Vec<Brick>, x: i32) -> bool {
             return check_line(
                 bricks
                     .into_iter()
                     .filter(|brick| brick.x == x)
                     .map(|brick| brick.y)
-                    .collect()
+                    .collect(),
             );
         }
 
@@ -39,7 +73,7 @@ impl Board {
                     .into_iter()
                     .filter(|brick| brick.y == y)
                     .map(|brick| brick.x)
-                    .collect()
+                    .collect(),
             );
         }
 
@@ -71,6 +105,9 @@ impl Board {
         if check_horizontal(player_bricks.clone(), y) {
             return true;
         }
+        if check_diagonal(player_bricks.clone()) {
+            return true;
+        }
         return false;
     }
 
@@ -91,9 +128,6 @@ impl Board {
             }
             println!("");
         }
-        // for brick in self.bricks.iter() {
-        //     println!("{0} at {1},{2}", brick.player.as_str(), brick.x, brick.y);
-        // }
     }
 
     pub fn get_brick(&self, x: i32, y: i32) -> &str {

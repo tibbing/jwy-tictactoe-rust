@@ -2,27 +2,32 @@ use ::std::*;
 
 mod lib;
 use crate::lib::board::Board;
+use crate::lib::board::GOAL;
+use crate::lib::board::MAX_SIZE;
 use crate::lib::player::Player;
 
 fn main() {
-    println!("Starting new game...");
+  println!("\n\n------------------------------------------------");
+  println!("Starting new game...");
+  println!(" · Input coordinates in the form X Y");
+  println!(" · The board can expand to a maximum size of {0}.",MAX_SIZE);
+  println!(" · First to {0} wins!",GOAL);
+  println!("------------------------------------------------\n");
+
     let bricks = Vec::new();
     let mut _board: Board = Board {
         bricks,
         player: Player::PlayerX,
-        size: 2,
+        size: 2, // Initial size
     };
 
-    let mut count = 0u32;
+
     _board.nextplayer();
 
     loop {
-        count += 1;
-
         let mut input = String::new();
         match io::stdin().read_line(&mut input) {
             Ok(_n) => {
-                // println!("Placing marker at {}", input);
                 let pos: Vec<_> = input
                     .trim()
                     .split_whitespace()
@@ -41,10 +46,6 @@ fn main() {
             }
             Err(error) => println!("error: {}", error),
         }
-
-        // if count == 6 {
-        //     break;
-        // }
 
         _board.nextplayer();
     }
