@@ -2,9 +2,9 @@ use ::std::*;
 
 mod lib;
 use crate::lib::board::Board;
+use crate::lib::board::EMPTY_CHAR;
 use crate::lib::board::GOAL;
 use crate::lib::board::MAX_SIZE;
-use crate::lib::board::EMPTY_CHAR;
 use crate::lib::player::Player;
 
 fn main() {
@@ -22,7 +22,6 @@ fn main() {
         size: 2, // Initial size
     };
 
-
     _board.nextplayer();
 
     loop {
@@ -38,9 +37,9 @@ fn main() {
                 let _pos_x: i32 = pos[0];
                 let _pos_y: i32 = pos[1];
 
-                if _board.get_brick(_pos_x,_pos_y) != EMPTY_CHAR{
+                if _board.get_brick(_pos_x, _pos_y) != EMPTY_CHAR {
                   println!("Oops! That spot is already taken. Try another one.");
-                }else{
+                } else {
                   _board.place(_pos_x, _pos_y);
                   _board.display();
                   if _board.is_winning_move(_pos_x, _pos_y) {
@@ -52,7 +51,6 @@ fn main() {
             }
             Err(error) => println!("error: {}", error),
         }
-
     }
 
     println!("Game over!");
