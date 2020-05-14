@@ -27,17 +27,28 @@ impl Board {
 
     pub fn place(&mut self, x: i8, y: i8) {
         let _brick: Brick = Brick {
-            x: x,
-            y: y,
+            x,
+            y,
             player: self.player,
         };
         self.bricks.push(_brick);
         self.size = cmp::max(cmp::max(x.abs(), y.abs()), self.size);
     }
 
+    pub fn is_within_board(&self, x: i8, y: i8) -> bool {
+        return x.abs() <= MAX_SIZE && y.abs() <= MAX_SIZE;
+    }
+
     pub fn is_winning_move(&self, x: i8, y: i8) -> bool {
         fn check_diagonal(bricks: Vec<Brick>, goal: i8) -> bool {
-            fn is_winning(bricks: &Vec<Brick>, x: i8, y: i8, direction: i8, goal: i8, count: i8) -> bool {
+            fn is_winning(
+                bricks: &Vec<Brick>,
+                x: i8,
+                y: i8,
+                direction: i8,
+                goal: i8,
+                count: i8,
+            ) -> bool {
                 let has_neighbor = |x, y| -> bool {
                     return bricks
                         .into_iter()
@@ -48,7 +59,14 @@ impl Board {
                     return true;
                 }
                 if has_neighbor(x, y) {
-                    return is_winning(bricks, x + 1, y + 1 * direction, direction, goal, count + 1);
+                    return is_winning(
+                        bricks,
+                        x + 1,
+                        y + 1 * direction,
+                        direction,
+                        goal,
+                        count + 1,
+                    );
                 }
                 return false;
             }
@@ -168,6 +186,16 @@ mod tests {
         _board.place(0, 0);
         assert_eq!(_board.get_brick(0, 0), _board.player.as_str());
         assert_eq!(_board.is_taken(0, 0), true);
+    }
+
+    #[test]
+    fn should_test_within_board() {
+        let mut _board = Board::new(3);
+        assert_eq!(_board.is_within_board(0, 0), true);
+        assert_eq!(_board.is_within_board(MAX_SIZE, MAX_SIZE), true);
+        assert_eq!(_board.is_within_board(-MAX_SIZE, -MAX_SIZE), true);
+        assert_eq!(_board.is_within_board(MAX_SIZE + 1, 0), false);
+        assert_eq!(_board.is_within_board(0, MAX_SIZE + 1), false);
     }
 
     #[test]

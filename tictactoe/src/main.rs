@@ -35,6 +35,8 @@ fn main() {
 
                 if _board.is_taken(_pos_x, _pos_y) {
                     println!("Oops! That spot is already taken. Try another one.");
+                } else if !_board.is_within_board(_pos_x, _pos_y) {
+                    println!("Oops! That spot is outside the board. Board max size is {0}. Try another one.",MAX_SIZE);
                 } else {
                     _board.place(_pos_x, _pos_y);
                     _board.display();
