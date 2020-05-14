@@ -3,18 +3,28 @@ use crate::lib::player::Player;
 use ::std::*;
 
 pub const GOAL: i8 = 3;
+pub const INIT_SIZE: i8 = 2;
 pub const MAX_SIZE: i8 = 15;
 pub const EMPTY_CHAR: &str = "·";
+pub const FIRST_PLAYER: Player = Player::PlayerX;
 
 #[derive(Clone)]
 pub struct Board {
     pub bricks: Vec<Brick>,
     pub player: Player,
-    pub size: i32,
+    pub size: i8,
 }
 
 impl Board {
-    pub fn place(&mut self, x: i32, y: i32) {
+    pub fn new() -> Board {
+        Board {
+            bricks: Vec::new(),
+            player: FIRST_PLAYER,
+            size: INIT_SIZE,
+        }
+    }
+
+    pub fn place(&mut self, x: i8, y: i8) {
         let _brick: Brick = Brick {
             x: x,
             y: y,
@@ -24,9 +34,9 @@ impl Board {
         self.size = cmp::max(cmp::max(x.abs(), y.abs()), self.size);
     }
 
-    pub fn is_winning_move(&self, x: i32, y: i32) -> bool {
+    pub fn is_winning_move(&self, x: i8, y: i8) -> bool {
         fn check_diagonal(bricks: Vec<Brick>) -> bool {
-            fn is_winning(bricks: &Vec<Brick>, x: i32, y: i32, direction: i32, count: i8) -> bool {
+            fn is_winning(bricks: &Vec<Brick>, x: i8, y: i8, direction: i8, count: i8) -> bool {
                 let has_neighbor = |x, y| -> bool {
                     return bricks
                         .into_iter()
@@ -58,7 +68,7 @@ impl Board {
             return false;
         }
 
-        fn check_vertical(bricks: Vec<Brick>, x: i32) -> bool {
+        fn check_vertical(bricks: Vec<Brick>, x: i8) -> bool {
             return check_line(
                 bricks
                     .into_iter()
@@ -68,7 +78,7 @@ impl Board {
             );
         }
 
-        fn check_horizontal(bricks: Vec<Brick>, y: i32) -> bool {
+        fn check_horizontal(bricks: Vec<Brick>, y: i8) -> bool {
             return check_line(
                 bricks
                     .into_iter()
@@ -78,7 +88,7 @@ impl Board {
             );
         }
 
-        fn check_line(mut values: Vec<i32>) -> bool {
+        fn check_line(mut values: Vec<i8>) -> bool {
             values.sort();
 
             let mut _count = 0;
@@ -131,7 +141,7 @@ impl Board {
         }
     }
 
-    pub fn get_brick(&self, x: i32, y: i32) -> &str {
+    pub fn get_brick(&self, x: i8, y: i8) -> &str {
         for brick in self.bricks.iter() {
             if brick.x == x && brick.y == y {
                 return brick.player.as_str();
