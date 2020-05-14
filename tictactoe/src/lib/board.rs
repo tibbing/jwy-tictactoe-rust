@@ -4,6 +4,7 @@ use ::std::*;
 
 pub const GOAL: i8 = 3;
 pub const MAX_SIZE: i8 = 15;
+pub const EMPTY_CHAR: &str = "·";
 
 #[derive(Clone)]
 pub struct Board {
@@ -136,6 +137,6 @@ impl Board {
                 return brick.player.as_str();
             }
         }
-        return "·";
+        return EMPTY_CHAR;
     }
 }
