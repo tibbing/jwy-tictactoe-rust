@@ -2,8 +2,9 @@ use ::std::*;
 
 mod lib;
 use crate::lib::board::Board;
-use crate::lib::board::GOAL;
 use crate::lib::board::MAX_SIZE;
+
+pub const GOAL: i8 = 5;
 
 fn main() {
     println!("\n\n------------------------------------------------");
@@ -16,7 +17,7 @@ fn main() {
     println!(" · First to {0} wins!", GOAL);
     println!("------------------------------------------------\n");
 
-    let mut _board = Board::new();
+    let mut _board = Board::new(GOAL);
     _board.nextplayer();
 
     loop {

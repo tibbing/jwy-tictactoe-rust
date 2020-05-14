@@ -2,7 +2,6 @@ use crate::lib::brick::Brick;
 use crate::lib::player::Player;
 use ::std::*;
 
-pub const GOAL: i8 = 3;
 pub const INIT_SIZE: i8 = 2;
 pub const MAX_SIZE: i8 = 15;
 pub const EMPTY_CHAR: &str = "·";
@@ -13,14 +12,16 @@ pub struct Board {
     pub bricks: Vec<Brick>,
     pub player: Player,
     pub size: i8,
+    pub goal: i8,
 }
 
 impl Board {
-    pub fn new() -> Board {
+    pub fn new(goal: i8) -> Board {
         Board {
             bricks: Vec::new(),
             player: FIRST_PLAYER,
             size: INIT_SIZE,
+            goal,
         }
     }
 
@@ -35,19 +36,19 @@ impl Board {
     }
 
     pub fn is_winning_move(&self, x: i8, y: i8) -> bool {
-        fn check_diagonal(bricks: Vec<Brick>) -> bool {
-            fn is_winning(bricks: &Vec<Brick>, x: i8, y: i8, direction: i8, count: i8) -> bool {
+        fn check_diagonal(bricks: Vec<Brick>, goal: i8) -> bool {
+            fn is_winning(bricks: &Vec<Brick>, x: i8, y: i8, direction: i8, goal: i8, count: i8) -> bool {
                 let has_neighbor = |x, y| -> bool {
                     return bricks
                         .into_iter()
                         .any(|brick| brick.x == x + 1 && brick.y == y + 1 * direction);
                 };
 
-                if count == GOAL - 1 {
+                if count == goal - 1 {
                     return true;
                 }
                 if has_neighbor(x, y) {
-                    return is_winning(bricks, x + 1, y + 1 * direction, direction, count + 1);
+                    return is_winning(bricks, x + 1, y + 1 * direction, direction, goal, count + 1);
                 }
                 return false;
             }
@@ -56,11 +57,11 @@ impl Board {
             let mut _last_brick = bricks[0];
             for _i in 0..bricks.len() {
                 let _p = bricks[_i];
-                if is_winning(&bricks, _p.x, _p.y, 1, 0) {
+                if is_winning(&bricks, _p.x, _p.y, 1, goal, 0) {
                     // Up
                     return true;
                 }
-                if is_winning(&bricks, _p.x, _p.y, -1, 0) {
+                if is_winning(&bricks, _p.x, _p.y, -1, goal, 0) {
                     // Down
                     return true;
                 }
@@ -68,27 +69,29 @@ impl Board {
             return false;
         }
 
-        fn check_vertical(bricks: Vec<Brick>, x: i8) -> bool {
+        fn check_vertical(bricks: Vec<Brick>, x: i8, goal: i8) -> bool {
             return check_line(
                 bricks
                     .into_iter()
                     .filter(|brick| brick.x == x)
                     .map(|brick| brick.y)
                     .collect(),
+                goal,
             );
         }
 
-        fn check_horizontal(bricks: Vec<Brick>, y: i8) -> bool {
+        fn check_horizontal(bricks: Vec<Brick>, y: i8, goal: i8) -> bool {
             return check_line(
                 bricks
                     .into_iter()
                     .filter(|brick| brick.y == y)
                     .map(|brick| brick.x)
                     .collect(),
+                goal,
             );
         }
 
-        fn check_line(mut values: Vec<i8>) -> bool {
+        fn check_line(mut values: Vec<i8>, goal: i8) -> bool {
             values.sort();
 
             let mut _count = 0;
@@ -96,7 +99,7 @@ impl Board {
             for _i in 0..values.len() {
                 let _p = values[_i];
                 _count = if _p == _last_val + 1 { _count + 1 } else { 0 };
-                if _count == GOAL - 1 {
+                if _count == goal - 1 {
                     return true;
                 }
                 _last_val = _p;
@@ -110,13 +113,13 @@ impl Board {
             .into_iter()
             .filter(|brick| brick.player.as_str() == self.player.as_str())
             .collect();
-        if check_vertical(player_bricks.clone(), x) {
+        if check_vertical(player_bricks.clone(), x, self.goal) {
             return true;
         }
-        if check_horizontal(player_bricks.clone(), y) {
+        if check_horizontal(player_bricks.clone(), y, self.goal) {
             return true;
         }
-        if check_diagonal(player_bricks.clone()) {
+        if check_diagonal(player_bricks.clone(), self.goal) {
             return true;
         }
         return false;
@@ -161,7 +164,7 @@ mod tests {
 
     #[test]
     fn should_test_already_taken() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(0, 0);
         assert_eq!(_board.get_brick(0, 0), _board.player.as_str());
         assert_eq!(_board.is_taken(0, 0), true);
@@ -169,7 +172,7 @@ mod tests {
 
     #[test]
     fn should_win_horizontal() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(-1, 0);
         _board.place(0, 0);
         _board.place(1, 0);
@@ -182,7 +185,7 @@ mod tests {
 
     #[test]
     fn should_win_vertical() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(0, -1);
         _board.place(0, 0);
         _board.place(0, 1);
@@ -195,7 +198,7 @@ mod tests {
 
     #[test]
     fn should_win_diagonal_up() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(-1, -1);
         _board.place(0, 0);
         _board.place(1, 1);
@@ -206,7 +209,7 @@ mod tests {
 
     #[test]
     fn should_win_diagonal_down() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(-1, 1);
         _board.place(0, 0);
         _board.place(1, -1);
@@ -217,7 +220,7 @@ mod tests {
 
     #[test]
     fn should_not_win_missing_horizontal() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(-2, 0);
         _board.place(-1, 0);
         _board.place(1, 0);
@@ -230,7 +233,7 @@ mod tests {
 
     #[test]
     fn should_not_win_missing_diagonal() {
-        let mut _board = Board::new();
+        let mut _board = Board::new(3);
         _board.place(-1, -1);
         _board.place(0, 0);
         _board.place(2, 2);
