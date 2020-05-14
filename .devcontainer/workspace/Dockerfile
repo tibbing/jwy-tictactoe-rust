@@ -1,13 +1,3 @@
-# FROM rust
-
-# WORKDIR /src
-
-# COPY keep-alive.sh /
-
-# EXPOSE 7878
-# ENTRYPOINT [ "/bin/sh" ]
-# CMD [ "/keep-alive.sh" ]
-
 #-------------------------------------------------------------------------------------------------------------
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License. See https://go.microsoft.com/fwlink/?linkid=2090316 for license information.
