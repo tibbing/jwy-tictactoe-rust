@@ -27,7 +27,7 @@ impl Board {
     pub fn is_winning_move(&self, x: i32, y: i32) -> bool {
         fn check_diagonal(bricks: Vec<Brick>) -> bool {
             fn is_winning(bricks: &Vec<Brick>, x: i32, y: i32, direction: i32, count: i8) -> bool {
-                let has_neighbor = |x, y, direction| -> bool {
+                let has_neighbor = |x, y| -> bool {
                     return bricks
                         .into_iter()
                         .any(|brick| brick.x == x + 1 && brick.y == y + 1 * direction);
@@ -36,7 +36,7 @@ impl Board {
                 if count == GOAL - 1 {
                     return true;
                 }
-                if has_neighbor(x, y, direction) {
+                if has_neighbor(x, y) {
                     return is_winning(bricks, x + 1, y + 1 * direction, direction, count + 1);
                 }
                 return false;
