@@ -1,8 +1,10 @@
 use ::std::*;
+use std::str::FromStr;
 
 mod lib;
 use crate::lib::board::Board;
 use crate::lib::board::MAX_SIZE;
+use crate::lib::position::Position;
 
 pub const GOAL: i8 = 5;
 
@@ -21,35 +23,43 @@ fn main() {
     _board.nextplayer();
 
     loop {
-        let mut input = String::new();
-        match io::stdin().read_line(&mut input) {
-            Ok(_n) => {
-                let pos: Vec<_> = input
-                    .trim()
-                    .split_whitespace()
-                    .map(|x| x.parse::<i8>().expect("Not an Integer!"))
-                    .collect();
+        let input = read_input::<Position>();
 
-                let _pos_x: i8 = pos[0];
-                let _pos_y: i8 = pos[1];
-
-                if _board.is_taken(_pos_x, _pos_y) {
+        match input {
+            Ok(position) => {
+                if _board.is_taken(position.x, position.y) {
                     println!("Oops! That spot is already taken. Try another one.");
-                } else if !_board.is_within_board(_pos_x, _pos_y) {
-                    println!("Oops! That spot is outside the board. Board max size is {0}. Try another one.",MAX_SIZE);
+                } else if !_board.is_within_board(position.x, position.y) {
+                    println!(
+                        "Oops! That spot is outside the board. Board max size is {0}. Try another one.",
+                        MAX_SIZE
+                    );
                 } else {
-                    _board.place(_pos_x, _pos_y);
+                    _board.place(position.x, position.y);
                     _board.display();
-                    if _board.is_winning_move(_pos_x, _pos_y) {
+                    if _board.is_winning_move(position.x, position.y) {
                         println!("{0} wins!", _board.player.as_str());
                         break;
                     }
                     _board.nextplayer();
                 }
             }
-            Err(error) => println!("error: {}", error),
+            Err(e) => println!("Oops, I didn't understand that! {0}. Try again.", e),
         }
     }
 
     println!("Game over!");
+}
+
+fn read_input<Position: FromStr>() -> Result<Position, String> {
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .map_err(|e| format!("Input cant be read: {}", e))
+        .and_then(|_| {
+            input
+                .trim()
+                .parse::<Position>()
+                .map_err(|_| "Not a valid position".to_string())
+        })
 }
